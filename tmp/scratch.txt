@@ -1,0 +1,8 @@
+eventstore -> to all reactor (reactor.<service>)
+ - eventstore must declare an exchange then publish with a
+      routing key of reactor.#
+ - reactor must have an queue and exchange with type topic
+
+eventstore -> to all projections (projection.<service>)
+
+client -> eventstore
