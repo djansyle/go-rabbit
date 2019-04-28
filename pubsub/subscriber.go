@@ -1,4 +1,4 @@
-package rabbit
+package pubsub
 
 import (
 	"djansyle/rabbit"
@@ -38,7 +38,7 @@ func CreateSubscriber(url string, queue string) Subscriber {
 func (s *subscribers) Close(id uint16) error {
 	subscriber := s.subscribers[id]
 	if subscriber == nil {
-		return fmt.Errorf("No subscriber found with id %d", id)
+		return fmt.Errorf("no subscriber found with id %d", id)
 	}
 
 	err := subscriber.connection.Close()

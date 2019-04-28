@@ -1,7 +1,8 @@
-package rabbit
+package pubsub
 
 import (
 	"djansyle/rabbit"
+
 	"github.com/streadway/amqp"
 )
 
@@ -40,7 +41,7 @@ func CreatePublisher(uri string, exchange string, topics []string) (Publisher, e
 		return nil, err
 	}
 
-	return (&rabbitPublisher{topics: topics, exchange: exchange, connection: conn}), nil
+	return &rabbitPublisher{topics: topics, exchange: exchange, connection: conn}, nil
 }
 
 // Publish a new message to the connection

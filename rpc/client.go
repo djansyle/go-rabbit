@@ -3,11 +3,28 @@ package rpc
 import (
 	"djansyle/rabbit"
 	"encoding/json"
-	"log"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/streadway/amqp"
 )
+
+type InvalidOutputError struct {
+	Type reflect.Type
+}
+
+func (e *InvalidOutputError) Error() string {
+	if e.Type == nil {
+		return "rabbit: Send Output(nil)"
+	}
+
+	if e.Type.Kind() != reflect.Ptr {
+		return "rabbit: Send Output(non-pointer " + e.Type.String() + ")"
+	}
+	return "rabbit: Send Output(nil " + e.Type.String() + ")"
+}
+
 
 // Sender is the interface that satisfies the sending of messages to the server
 type Sender interface {
@@ -41,11 +58,15 @@ func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) 
 		nil,   // args
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		true,   // auto-ack
-		false,  // exclusive
+		false,   // auto-ack
+		true,  // exclusive
 		false,  // no-local
 		false,  // no-wait
 		nil,    // args
@@ -55,23 +76,32 @@ func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) 
 	go func() {
 		for d := range msgs {
 			request := requests[d.CorrelationId]
-			log.Printf("Message received: %s", string(d.Body))
+			fmt.Printf("Message received: %s", string(d.Body))
 			if request == nil {
-				log.Printf("Message unexpectedly arrive with correlation id %s.", d.CorrelationId)
+				fmt.Printf("Message unexpectedly arrive with correlation id %s.", d.CorrelationId)
 				continue
 			}
 
 			request <- d.Body
 			delete(requests, d.CorrelationId)
-			d.Ack(false)
+			ack := d.Ack(false)
+			if ack != nil {
+				fmt.Printf("Failed to ack: %v", err)
+			}
 		}
 	}()
 
-	return (&client{requests: requests, serverQueue: serverQueue, connection: conn, timeout: timeoutRequest, queue: &q}), nil
+	return &client{requests: requests, serverQueue: serverQueue, connection: conn, timeout: timeoutRequest, queue: &q}, nil
 }
 
 // Sends the message to the rpc server
 func (c *client) Send(message interface{}, output interface{}) error {
+	ro := reflect.ValueOf(output)
+	if ro.Kind() != reflect.Ptr || ro.IsNil() {
+		return &InvalidOutputError{reflect.TypeOf(ro)}
+	}
+
+
 	corrID := rabbit.RandomID()
 
 	request := make(chan []byte)
@@ -84,7 +114,7 @@ func (c *client) Send(message interface{}, output interface{}) error {
 		return err
 	}
 
-	c.connection.Channel.Publish(
+	err = c.connection.Channel.Publish(
 		"",
 		c.serverQueue,
 		false,
@@ -97,16 +127,23 @@ func (c *client) Send(message interface{}, output interface{}) error {
 		},
 	)
 
+	if err != nil {
+		return err
+	}
+
 	select {
 	case message := <-request:
 		{
-			err := json.Unmarshal(message, output)
-			if err != nil {
-				return err
-			}
+			var response Response
+
+			_ = json.Unmarshal(message, &response)
+
+			fmt.Printf("tmp response: %s", string(response.Result))
+
+			_ = json.Unmarshal(response.Result, ro.Interface())
 		}
 	case <-time.After(c.timeout):
-		return rabbit.ErrTimeOut
+		return rabbit.TimeOutError
 	}
 
 	return nil

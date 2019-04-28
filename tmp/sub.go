@@ -1,8 +1,8 @@
 package main
 
 import (
+	"djansyle/rabbit"
 	"fmt"
-	rabbit "djansyle/rabbit"
 )
 
 func main() {
@@ -21,5 +21,5 @@ func main() {
 		}
 	}()
 
-	<- forever
+	<-forever
 }

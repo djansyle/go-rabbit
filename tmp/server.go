@@ -1,7 +1,8 @@
 package main
 
 import (
-	rpc "djansyle/rabbit/rpc"
+	"djansyle/rabbit"
+	"djansyle/rabbit/rpc"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,13 +22,13 @@ type Result struct {
 }
 
 // Add method
-func (a *Arith) Add(data AddPayload) (Result, error) {
-	return Result{ Result: data.X + data.Y }, nil
+func (a *Arith) Add(data AddPayload) (Result, *rabbit.ApplicationError) {
+	return Result{Result: data.X + data.Y}, nil
 }
 
 // Subtract method
-func (a *Arith) Subtract(data AddPayload) (Result, error) {
-	return Result{ Result: data.X - data.Y }, nil
+func (a *Arith) Subtract(data AddPayload) (Result, *rabbit.ApplicationError) {
+	return Result{Result: data.X - data.Y}, nil
 }
 
 func main() {

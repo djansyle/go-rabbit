@@ -22,7 +22,7 @@ func CreateConnection(url string) (*Connection, error) {
 		return nil, err
 	}
 
-	return (&Connection{Connection: conn, Channel: ch}), nil
+	return &Connection{Connection: conn, Channel: ch}, nil
 }
 
 // Close closes the rabbit connection and it's channels
