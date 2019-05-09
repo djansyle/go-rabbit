@@ -1,7 +1,7 @@
 package pubsub
 
 import (
-	"djansyle/rabbit"
+	"djansyle/go-rabbit"
 
 	"github.com/streadway/amqp"
 )

@@ -1,7 +1,7 @@
 package rpc
 
 import (
-	"djansyle/rabbit"
+	"djansyle/go-rabbit"
 	"testing"
 	"time"
 )
