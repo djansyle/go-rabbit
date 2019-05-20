@@ -1,21 +1,20 @@
-package pubsub
+package rabbit
 
 import (
-	"djansyle/go-rabbit"
 	"github.com/streadway/amqp"
 )
 
-
+// Subscriber holds the information of the subscriber
 type Subscriber struct {
-	queue *amqp.Queue
-	exchange string
-	connection *rabbit.Connection
-	Messages <-chan amqp.Delivery
+	queue      *amqp.Queue
+	exchange   string
+	connection *Connection
+	Messages   <-chan amqp.Delivery
 }
 
 // CreateSubscriber creates a new instance for
 func CreateSubscriber(url string, exchange string) (*Subscriber, error) {
-	con, err := rabbit.CreateConnection(url)
+	con, err := CreateConnection(url)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +39,7 @@ func CreateSubscriber(url string, exchange string) (*Subscriber, error) {
 		"",
 		true,  // durable
 		false, // delete when unused
-		false,  // exclusive
+		false, // exclusive
 		false, // no wait
 		nil,   // arguments
 	)
@@ -53,7 +52,7 @@ func CreateSubscriber(url string, exchange string) (*Subscriber, error) {
 		q.Name, // queue name
 		"",     // consumer,
 		true,   // auto-ack
-		true,  // exclusive
+		true,   // exclusive
 		false,  // no-local
 		false,  // no-wait
 		nil,
@@ -63,9 +62,10 @@ func CreateSubscriber(url string, exchange string) (*Subscriber, error) {
 		return nil, err
 	}
 
-	return &Subscriber{ queue: &q, connection: con, Messages: messages, exchange: exchange }, nil
+	return &Subscriber{queue: &q, connection: con, Messages: messages, exchange: exchange}, nil
 }
 
+// Close the connection of the rabbitmq
 func (s *Subscriber) Close() error {
 	err := s.connection.Close()
 	if err != nil {
@@ -75,14 +75,15 @@ func (s *Subscriber) Close() error {
 	return nil
 }
 
+// AddTopics to the current connection's channel
 func (s *Subscriber) AddTopics(topics []string) error {
 	for _, topic := range topics {
 		err := s.connection.Channel.QueueBind(
-			s.queue.Name,   // name
-			topic,    // key
-			s.exchange, // exchange
-			false,    // no-wait
-			nil,      // args
+			s.queue.Name, // name
+			topic,        // key
+			s.exchange,   // exchange
+			false,        // no-wait
+			nil,          // args
 		)
 
 		if err != nil {

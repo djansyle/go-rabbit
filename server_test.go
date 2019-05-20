@@ -1,13 +1,8 @@
-package rpc
+package rabbit
 
 import (
-	"djansyle/go-rabbit"
 	"testing"
 	"time"
-)
-
-var (
-	url = "amqp://guest:guest@localhost:5672/"
 )
 
 type Service int
@@ -18,24 +13,24 @@ type AddPayload struct {
 }
 
 // Add method
-func (a *Service) Add(data AddPayload) (int, *rabbit.ApplicationError) {
+func (a *Service) Add(data AddPayload) (int, *ApplicationError) {
 	return data.X + data.Y, nil
 }
 
 // Subtract method
-func (*Service) Subtract(data AddPayload) (int, *rabbit.ApplicationError) {
+func (*Service) Subtract(data AddPayload) (int, *ApplicationError) {
 	return data.X - data.Y, nil
 }
 
-func (*Service) StringReturn(data struct{ Message string }) (string, *rabbit.ApplicationError) {
+func (*Service) StringReturn(data struct{ Message string }) (string, *ApplicationError) {
 	return data.Message + " world", nil
 }
 
-func (*Service) ErrorReturn(_ interface{}) (interface{}, *rabbit.ApplicationError) {
-	return nil, &rabbit.ApplicationError{"500", "Message", nil}
+func (*Service) ErrorReturn(_ interface{}) (interface{}, *ApplicationError) {
+	return nil, &ApplicationError{"500", "Message", nil}
 }
 
-func (*Service) StructReturn(_ interface{}) (interface{}, *rabbit.ApplicationError) {
+func (*Service) StructReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return struct {
 		Message string `json:"message"`
 	}{Message: "hello world"}, nil
@@ -137,9 +132,9 @@ func TestRPC(t *testing.T) {
 
 	if err != nil {
 		// should be able to cast to ApplicationError
-		ae := err.(*rabbit.ApplicationError)
+		ae := err.(*ApplicationError)
 		if ae == nil {
-			t.Fatalf("expected error can be cast to *rabbit.ApplicationError")
+			t.Fatalf("expected error can be cast to *ApplicationError")
 		}
 
 		if ae.Message != "Message" {

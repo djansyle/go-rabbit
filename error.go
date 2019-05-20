@@ -4,13 +4,14 @@ import (
 	"errors"
 )
 
-// TimeOutError is return when the request timed out.
-var TimeOutError = errors.New("request timeout")
+// ErrTimeout is return when the request timed out.
+var ErrTimeout = errors.New("request timeout")
 
+// ApplicationError is return when request has a validation error
 type ApplicationError struct {
-	Code string `json:"code"`
-	Message string `json:"message"`
-	Meta interface{} `json:"meta"`
+	Code    string      `json:"code"`
+	Message string      `json:"message"`
+	Meta    interface{} `json:"meta"`
 }
 
 func (e *ApplicationError) Error() string {

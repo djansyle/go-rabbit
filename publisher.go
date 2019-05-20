@@ -1,8 +1,6 @@
-package pubsub
+package rabbit
 
 import (
-	"djansyle/go-rabbit"
-
 	"github.com/streadway/amqp"
 )
 
@@ -16,12 +14,12 @@ type rabbitPublisher struct {
 	topics   []string
 	exchange string // name of the exchange
 
-	connection *rabbit.Connection
+	connection *Connection
 }
 
 // CreatePublisher creates a new instance for a publisher
 func CreatePublisher(uri string, exchange string, topics []string) (Publisher, error) {
-	conn, err := rabbit.CreateConnection(uri)
+	conn, err := CreateConnection(uri)
 
 	if err != nil {
 		return nil, err

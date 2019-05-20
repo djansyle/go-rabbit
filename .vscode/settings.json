@@ -2,5 +2,8 @@
   "cSpell.words": [
     "amqp",
     "rabbitmq"
+  ],
+  "cSpell.ignoreWords": [
+    "streadway"
   ]
 }

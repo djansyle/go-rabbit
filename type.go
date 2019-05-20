@@ -1,4 +1,4 @@
-package rpc
+package rabbit
 
 import "encoding/json"
 
@@ -13,3 +13,7 @@ type Response struct {
 	Result json.RawMessage `json:"result"`
 	Error  json.RawMessage `json:"error"` // present when there is a problem processing the request
 }
+
+var (
+	url = "amqp://guest:guest@localhost:5672/"
+)

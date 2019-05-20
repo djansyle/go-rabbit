@@ -1,4 +1,4 @@
-package rpc
+package rabbit
 
 import (
 	"testing"

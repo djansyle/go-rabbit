@@ -1,7 +1,6 @@
-package rpc
+package rabbit
 
 import (
-	"djansyle/go-rabbit"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -36,13 +35,13 @@ type client struct {
 	serverQueue string
 	timeout     time.Duration
 
-	connection *rabbit.Connection
+	connection *Connection
 	queue      *amqp.Queue
 }
 
 // CreateClient creates a new client for rpc server
 func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) (Sender, error) {
-	conn, err := rabbit.CreateConnection(url)
+	conn, err := CreateConnection(url)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +100,7 @@ func (c *client) Send(message interface{}, output interface{}) error {
 		return &ErrInvalidOutput{reflect.TypeOf(ro)}
 	}
 
-	corrID := rabbit.RandomID()
+	corrID := RandomID()
 
 	request := make(chan []byte)
 	defer close(request)
@@ -142,7 +141,7 @@ func (c *client) Send(message interface{}, output interface{}) error {
 			_ = json.Unmarshal(response.Result, ro.Interface())
 		}
 	case <-time.After(c.timeout):
-		return rabbit.TimeOutError
+		return ErrTimeout
 	}
 
 	return nil

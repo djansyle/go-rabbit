@@ -1,7 +1,6 @@
-package rpc
+package rabbit
 
 import (
-	"djansyle/go-rabbit"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -11,7 +10,7 @@ import (
 	"github.com/streadway/amqp"
 )
 
-var typeOfApplicationError = reflect.TypeOf(&(rabbit.ApplicationError{}))
+var typeOfApplicationError = reflect.TypeOf(&(ApplicationError{}))
 
 var unsupportedReplyType = []reflect.Kind{
 	reflect.Ptr,
@@ -46,7 +45,7 @@ type service struct {
 
 // rpcServer instance holds the information of the server
 type rpcServer struct {
-	connection *rabbit.Connection
+	connection *Connection
 	messages   <-chan amqp.Delivery
 	done       chan bool
 
@@ -57,7 +56,7 @@ type rpcServer struct {
 
 // CreateServer creates a new server
 func CreateServer(url string, queue string) (Server, error) {
-	conn, err := rabbit.CreateConnection(url)
+	conn, err := CreateConnection(url)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +187,7 @@ func process(server *rpcServer, msg *amqp.Delivery) {
 			server,
 			msg,
 			nil,
-			&rabbit.ApplicationError{
+			&ApplicationError{
 				"500",
 				"Failed to parse data",
 				struct{ body string }{string(msg.Body)},
@@ -208,7 +207,7 @@ func process(server *rpcServer, msg *amqp.Delivery) {
 			server,
 			msg,
 			nil,
-			&rabbit.ApplicationError{
+			&ApplicationError{
 				"500",
 				fmt.Sprintf("Service %q not found", serviceName),
 				nil,
@@ -230,7 +229,7 @@ func process(server *rpcServer, msg *amqp.Delivery) {
 			server,
 			msg,
 			nil,
-			&rabbit.ApplicationError{
+			&ApplicationError{
 				"500",
 				"Failed to parse data",
 				struct{ body string }{string(msg.Body)},
@@ -240,7 +239,7 @@ func process(server *rpcServer, msg *amqp.Delivery) {
 
 	result := fn.method.Func.Call([]reflect.Value{fn.rcvr, param.Elem()})
 
-	err := result[1].Interface().(*rabbit.ApplicationError)
+	err := result[1].Interface().(*ApplicationError)
 	if err != nil {
 		reply(server, msg, nil, err)
 		return
@@ -249,7 +248,7 @@ func process(server *rpcServer, msg *amqp.Delivery) {
 	reply(server, msg, result[0].Interface(), nil)
 }
 
-func getReplyPayload(data interface{}, appErr *rabbit.ApplicationError) (reply []byte) {
+func getReplyPayload(data interface{}, appErr *ApplicationError) (reply []byte) {
 	var err = []byte("null")
 	var ae = []byte("null")
 
@@ -280,7 +279,7 @@ func getReplyPayload(data interface{}, appErr *rabbit.ApplicationError) (reply [
 	return
 }
 
-func reply(server *rpcServer, msg *amqp.Delivery, data interface{}, appErr *rabbit.ApplicationError) {
+func reply(server *rpcServer, msg *amqp.Delivery, data interface{}, appErr *ApplicationError) {
 	response := getReplyPayload(data, appErr)
 
 	err := server.connection.Channel.Publish(
