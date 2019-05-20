@@ -41,7 +41,7 @@ func failRabbitMQConnect(t *testing.T, err error) {
 }
 
 func startNewServer(t *testing.T) {
-	newServer, err := CreateServer(url, "Service")
+	newServer, err := CreateServer(defaultURL, "Service")
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}
@@ -58,7 +58,7 @@ type request struct {
 func TestRPC(t *testing.T) {
 	startNewServer(t)
 	t.Log("Server started")
-	client, err := CreateClient(url, "Service", 5*time.Second)
+	client, err := CreateClient(defaultURL, "Service", 5*time.Second)
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}

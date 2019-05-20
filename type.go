@@ -14,6 +14,9 @@ type Response struct {
 	Error  json.RawMessage `json:"error"` // present when there is a problem processing the request
 }
 
+// Service alias for all service type
+type Service int
+
 var (
-	url = "amqp://guest:guest@localhost:5672/"
+	defaultURL = "amqp://guest:guest@localhost:5672/"
 )

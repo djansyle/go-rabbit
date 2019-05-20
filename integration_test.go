@@ -13,13 +13,13 @@ func assertNilError(t *testing.T, err error) {
 }
 
 func TestPubSub(t *testing.T) {
-	subscribers, err := CreateSubscriber(url, "OneWallet")
+	subscribers, err := CreateSubscriber(defaultURL, "OneWallet")
 	assertNilError(t, err)
 
 	err = subscribers.AddTopics([]string{"reactor.#"})
 	assertNilError(t, err)
 
-	publisher, err := CreatePublisher(url, "OneWallet", []string{"reactor.123"})
+	publisher, err := CreatePublisher(defaultURL, "OneWallet", []string{"reactor.123"})
 	assertNilError(t, err)
 
 	err = publisher.Publish([]byte("hello world"))

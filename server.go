@@ -21,9 +21,6 @@ var unsupportedReplyType = []reflect.Kind{
 	reflect.UnsafePointer,
 }
 
-// Service alias for all service type
-type Service interface{}
-
 // Server is the interface implemented for all servers
 type Server interface {
 	Close()
