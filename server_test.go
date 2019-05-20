@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type Service int
+type TestService int
 
 type AddPayload struct {
 	X int `json:"x"`
@@ -13,24 +13,24 @@ type AddPayload struct {
 }
 
 // Add method
-func (a *Service) Add(data AddPayload) (int, *ApplicationError) {
+func (a *TestService) Add(data AddPayload) (int, *ApplicationError) {
 	return data.X + data.Y, nil
 }
 
 // Subtract method
-func (*Service) Subtract(data AddPayload) (int, *ApplicationError) {
+func (*TestService) Subtract(data AddPayload) (int, *ApplicationError) {
 	return data.X - data.Y, nil
 }
 
-func (*Service) StringReturn(data struct{ Message string }) (string, *ApplicationError) {
+func (*TestService) StringReturn(data struct{ Message string }) (string, *ApplicationError) {
 	return data.Message + " world", nil
 }
 
-func (*Service) ErrorReturn(_ interface{}) (interface{}, *ApplicationError) {
+func (*TestService) ErrorReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return nil, &ApplicationError{"500", "Message", nil}
 }
 
-func (*Service) StructReturn(_ interface{}) (interface{}, *ApplicationError) {
+func (*TestService) StructReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return struct {
 		Message string `json:"message"`
 	}{Message: "hello world"}, nil
@@ -46,7 +46,7 @@ func startNewServer(t *testing.T) {
 		failRabbitMQConnect(t, err)
 	}
 
-	newServer.Register(new(Service))
+	newServer.Register(new(TestService))
 	go newServer.Serve()
 }
 
