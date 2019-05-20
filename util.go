@@ -1,8 +1,9 @@
 package rabbit
 
 import (
-	"github.com/satori/go.uuid"
 	"strings"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 // RandomID generates a random id from uuidv4

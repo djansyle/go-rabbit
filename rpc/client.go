@@ -10,11 +10,12 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type InvalidOutputError struct {
+// ErrInvalidOutput error when the service method is not supported
+type ErrInvalidOutput struct {
 	Type reflect.Type
 }
 
-func (e *InvalidOutputError) Error() string {
+func (e *ErrInvalidOutput) Error() string {
 	if e.Type == nil {
 		return "rabbit: Send Output(nil)"
 	}
@@ -24,7 +25,6 @@ func (e *InvalidOutputError) Error() string {
 	}
 	return "rabbit: Send Output(nil " + e.Type.String() + ")"
 }
-
 
 // Sender is the interface that satisfies the sending of messages to the server
 type Sender interface {
@@ -65,8 +65,8 @@ func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) 
 	msgs, err := ch.Consume(
 		q.Name, // queue
 		"",     // consumer
-		false,   // auto-ack
-		true,  // exclusive
+		false,  // auto-ack
+		true,   // exclusive
 		false,  // no-local
 		false,  // no-wait
 		nil,    // args
@@ -98,9 +98,8 @@ func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) 
 func (c *client) Send(message interface{}, output interface{}) error {
 	ro := reflect.ValueOf(output)
 	if ro.Kind() != reflect.Ptr || ro.IsNil() {
-		return &InvalidOutputError{reflect.TypeOf(ro)}
+		return &ErrInvalidOutput{reflect.TypeOf(ro)}
 	}
-
 
 	corrID := rabbit.RandomID()
 
