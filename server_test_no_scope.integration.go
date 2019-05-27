@@ -5,58 +5,49 @@ import (
 	"time"
 )
 
-type TestService int
+type TestServiceNS int
 
-type AddPayload struct {
+type AddPayloadNS struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 }
 
 // Add method
-func (a *TestService) Add(data AddPayload) (int, *ApplicationError) {
+func (a *TestServiceNS) Add(data AddPayload) (int, *ApplicationError) {
 	return data.X + data.Y, nil
 }
 
 // Subtract method
-func (*TestService) Subtract(data AddPayload) (int, *ApplicationError) {
+func (*TestServiceNS) Subtract(data AddPayload) (int, *ApplicationError) {
 	return data.X - data.Y, nil
 }
 
-func (*TestService) StringReturn(data struct{ Message string }) (string, *ApplicationError) {
+func (*TestServiceNS) StringReturn(data struct{ Message string }) (string, *ApplicationError) {
 	return data.Message + " world", nil
 }
 
-func (*TestService) ErrorReturn(_ interface{}) (interface{}, *ApplicationError) {
+func (*TestServiceNS) ErrorReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return nil, &ApplicationError{"500", "Message", nil}
 }
 
-func (*TestService) StructReturn(_ interface{}) (interface{}, *ApplicationError) {
+func (*TestServiceNS) StructReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return struct {
 		Message string `json:"message"`
 	}{Message: "hello world"}, nil
 }
 
-func failRabbitMQConnect(t *testing.T, err error) {
-	t.Fatalf("Error connecting to RabbitMQ instance. Err = %v", err)
-}
-
-func startNewServer(t *testing.T) {
+func startNewServerNS(t *testing.T) {
 	newServer, err := CreateServer(defaultURL, "Service")
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}
 
-	newServer.Register(new(TestService))
+	newServer.Register(new(TestServiceNS), true)
 	go newServer.Serve()
 }
 
-type request struct {
-	Action string `json:"type"`
-	Data   interface{}
-}
-
-func TestRPC(t *testing.T) {
-	startNewServer(t)
+func TestRPCNS(t *testing.T) {
+	startNewServerNS(t)
 	t.Log("Server started")
 	client, err := CreateClient(defaultURL, "Service", 5*time.Second)
 	if err != nil {
@@ -67,7 +58,7 @@ func TestRPC(t *testing.T) {
 
 	err = client.Send(
 		request{
-			Action: "Service.Add",
+			Action: "Add",
 			Data: struct {
 				X int `json:"x"`
 				Y int `json:"y"`
@@ -85,7 +76,7 @@ func TestRPC(t *testing.T) {
 	// Subtract
 	err = client.Send(
 		request{
-			Action: "Service.Subtract",
+			Action: "Subtract",
 			Data: struct {
 				X int `json:"x"`
 				Y int `json:"y"`
@@ -105,7 +96,7 @@ func TestRPC(t *testing.T) {
 	var stringResult string
 	err = client.Send(
 		request{
-			Action: "Service.StringReturn",
+			Action: "StringReturn",
 			Data: struct {
 				Message string `json:"message"`
 			}{Message: "hello"}},
@@ -124,7 +115,7 @@ func TestRPC(t *testing.T) {
 	var nilInterface interface{}
 	err = client.Send(
 		request{
-			Action: "Service.ErrorReturn",
+			Action: "ErrorReturn",
 			Data: struct {
 			}{}},
 		&nilInterface,

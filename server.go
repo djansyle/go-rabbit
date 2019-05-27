@@ -24,7 +24,7 @@ var unsupportedReplyType = []reflect.Kind{
 // Server is the interface implemented for all servers
 type Server interface {
 	Close()
-	Register(interface{})
+	Register(interface{}, bool)
 	Serve()
 }
 
@@ -153,12 +153,16 @@ func suitableMethods(rcvr interface{}) map[string]*methodType {
 }
 
 // Register a service that handles a request
-func (server *rpcServer) Register(rcvr interface{}) {
+func (server *rpcServer) Register(rcvr interface{}, noScope bool) {
 	s := new(service)
 
 	s.methods = suitableMethods(rcvr)
 	s.rcvr = reflect.ValueOf(rcvr)
-	s.name = reflect.Indirect(reflect.ValueOf(rcvr)).Type().Name()
+	s.name = ""
+
+	if !noScope {
+		s.name = reflect.Indirect(reflect.ValueOf(rcvr)).Type().Name()
+	}
 
 	if _, exists := server.serviceMap.LoadOrStore(s.name, s); exists {
 		panic("Service is already registered.")
@@ -181,7 +185,7 @@ func (server *rpcServer) Serve() {
 
 func process(server *rpcServer, msg *amqp.Delivery) {
 	var body Request
-	fmt.Printf("rpc.process: message recieved: %s", string(msg.Body))
+	fmt.Printf("rpc.process: message received: %s", string(msg.Body))
 	if err := json.Unmarshal(msg.Body, &body); err != nil {
 		reply(
 			server,
@@ -196,9 +200,13 @@ func process(server *rpcServer, msg *amqp.Delivery) {
 	}
 
 	dot := strings.LastIndex(body.Action, ".")
+	serviceName := ""
+	methodName := body.Action
 
-	serviceName := body.Action[:dot]
-	methodName := body.Action[dot+1:]
+	if dot != -1 {
+		serviceName = body.Action[:dot]
+		methodName = body.Action[dot+1:]
+	}
 
 	svci, _ := server.serviceMap.Load(serviceName)
 	if svci == nil {
