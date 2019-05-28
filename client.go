@@ -2,7 +2,7 @@ package rabbit
 
 import (
 	"encoding/json"
-	"fmt"
+	"log"
 	"reflect"
 	"time"
 
@@ -75,9 +75,9 @@ func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) 
 	go func() {
 		for d := range msgs {
 			request := requests[d.CorrelationId]
-			fmt.Printf("Message received: %s", string(d.Body))
+			log.Printf("Message received: %s", string(d.Body))
 			if request == nil {
-				fmt.Printf("Message unexpectedly arrive with correlation id %s.", d.CorrelationId)
+				log.Printf("Message unexpectedly arrive with correlation id %s.", d.CorrelationId)
 				continue
 			}
 
@@ -85,7 +85,7 @@ func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) 
 			delete(requests, d.CorrelationId)
 			ack := d.Ack(false)
 			if ack != nil {
-				fmt.Printf("Failed to ack: %v", err)
+				log.Printf("Failed to ack: %v", err)
 			}
 		}
 	}()
@@ -136,7 +136,7 @@ func (c *client) Send(message interface{}, output interface{}) error {
 
 			_ = json.Unmarshal(message, &response)
 
-			fmt.Printf("tmp response: %s", string(response.Result))
+			log.Printf("tmp response: %s", string(response.Result))
 
 			_ = json.Unmarshal(response.Result, ro.Interface())
 		}

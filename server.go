@@ -17,7 +17,6 @@ var unsupportedReplyType = []reflect.Kind{
 	reflect.Chan,
 	reflect.Func,
 	reflect.Map,
-	reflect.Slice,
 	reflect.UnsafePointer,
 }
 
