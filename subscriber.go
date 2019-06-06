@@ -1,6 +1,7 @@
 package rabbit
 
 import (
+	uuid "github.com/satori/go.uuid"
 	"github.com/streadway/amqp"
 )
 
@@ -36,8 +37,8 @@ func CreateSubscriber(url string, exchange string) (*Subscriber, error) {
 	}
 
 	q, err := ch.QueueDeclare(
-		"",
-		true,  // durable
+		uuid.NewV4().String(),
+		false, // durable
 		false, // delete when unused
 		false, // exclusive
 		false, // no wait

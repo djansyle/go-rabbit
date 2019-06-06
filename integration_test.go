@@ -16,10 +16,12 @@ func TestPubSub(t *testing.T) {
 	subscribers, err := CreateSubscriber(defaultURL, "OneWallet")
 	assertNilError(t, err)
 
-	err = subscribers.AddTopics([]string{"reactor.#"})
+	name := subscribers.queue.Name
+
+	err = subscribers.AddTopics([]string{name + ".#"})
 	assertNilError(t, err)
 
-	publisher, err := CreatePublisher(defaultURL, "OneWallet", []string{"reactor.123"})
+	publisher, err := CreatePublisher(defaultURL, "OneWallet", []string{name + ".123"})
 	assertNilError(t, err)
 
 	err = publisher.Publish([]byte("hello world"))
