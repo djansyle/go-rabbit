@@ -134,11 +134,15 @@ func (c *client) Send(message interface{}, output interface{}) error {
 		{
 			var response Response
 
-			_ = json.Unmarshal(message, &response)
+			err = json.Unmarshal(message, &response)
+			if err != nil {
+				return err
+			}
 
-			log.Printf("tmp response: %s", string(response.Result))
-
-			_ = json.Unmarshal(response.Result, ro.Interface())
+			err = json.Unmarshal(response.Result, ro.Interface())
+			if err != nil {
+				return err
+			}
 		}
 	case <-time.After(c.timeout):
 		return ErrTimeout
