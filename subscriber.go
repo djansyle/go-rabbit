@@ -39,7 +39,7 @@ func CreateSubscriber(url string, exchange string) (*Subscriber, error) {
 	q, err := ch.QueueDeclare(
 		uuid.NewV4().String(),
 		false, // durable
-		false, // delete when unused
+		true,  // delete when unused
 		false, // exclusive
 		false, // no wait
 		nil,   // arguments
