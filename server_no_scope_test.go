@@ -62,7 +62,7 @@ func startNewServerNS(t *testing.T) {
 func TestRPCNS(t *testing.T) {
 	startNewServerNS(t)
 	t.Log("Server started")
-	client, err := CreateClient(defaultURL, "ServiceNS", 5*time.Second)
+	client, err := CreateClient(&CreateClientOption{URL: defaultURL, Queue: "ServiceNS", TimeoutRequest: 5 * time.Second})
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}

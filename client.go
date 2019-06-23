@@ -39,9 +39,16 @@ type client struct {
 	queue      *amqp.Queue
 }
 
+// CreateClientOption is the struct that holds the information of the new client
+type CreateClientOption struct {
+	URL            string
+	Queue          string
+	TimeoutRequest time.Duration
+}
+
 // CreateClient creates a new client for rpc server
-func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) (Sender, error) {
-	conn, err := CreateConnection(url)
+func CreateClient(opt *CreateClientOption) (Sender, error) {
+	conn, err := CreateConnection(opt.URL)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +97,7 @@ func CreateClient(url string, serverQueue string, timeoutRequest time.Duration) 
 		}
 	}()
 
-	return &client{requests: requests, serverQueue: serverQueue, connection: conn, timeout: timeoutRequest, queue: &q}, nil
+	return &client{requests: requests, serverQueue: opt.Queue, connection: conn, timeout: opt.TimeoutRequest, queue: &q}, nil
 }
 
 // Sends the message to the rpc server

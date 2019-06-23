@@ -6,7 +6,7 @@ import (
 )
 
 func TestCreateClient(t *testing.T) {
-	c, err := CreateClient("amqp://guest:guest@localhost:5672/", "go_test", 5*time.Second)
+	c, err := CreateClient(&CreateClientOption{URL: "amqp://guest:guest@localhost:5672/", Queue: "go_test", TimeoutRequest: 5 * time.Second})
 
 	if err != nil {
 		t.Fatalf("Failed to connect reason: %v", err)
@@ -17,4 +17,3 @@ func TestCreateClient(t *testing.T) {
 	}
 
 }
-
