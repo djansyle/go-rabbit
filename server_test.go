@@ -58,7 +58,7 @@ func startNewServer(t *testing.T) {
 		failRabbitMQConnect(t, err)
 	}
 
-	newServer.Register(new(TestService), false)
+	newServer.Register(new(TestService))
 	go newServer.Serve()
 }
 

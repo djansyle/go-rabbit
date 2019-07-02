@@ -5,64 +5,58 @@ import (
 	"time"
 )
 
-// TestServiceNS ...
-type TestServiceNS int
-
-// AddPayloadNS ...
-type AddPayloadNS struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
+// NameService ...
+type NameService int
 
 // Add method
-func (a *TestServiceNS) Add(data AddPayload) (int, *ApplicationError) {
+func (a *NameService) Add(data AddPayload) (int, *ApplicationError) {
 	return data.X + data.Y, nil
 }
 
 // Subtract method
-func (*TestServiceNS) Subtract(data AddPayload) (int, *ApplicationError) {
+func (*NameService) Subtract(data AddPayload) (int, *ApplicationError) {
 	return data.X - data.Y, nil
 }
 
 // StringReturn method
-func (*TestServiceNS) StringReturn(data struct{ Message string }) (string, *ApplicationError) {
+func (*NameService) StringReturn(data struct{ Message string }) (string, *ApplicationError) {
 	return data.Message + " world", nil
 }
 
-// ErrorReturn method
-func (*TestServiceNS) ErrorReturn(_ interface{}) (interface{}, *ApplicationError) {
+// ErrorReturn ...
+func (*NameService) ErrorReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return nil, &ApplicationError{"500", "Message", nil}
 }
 
-// StructReturn method
-func (*TestServiceNS) StructReturn(_ interface{}) (interface{}, *ApplicationError) {
+// StructReturn ...
+func (*NameService) StructReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return struct {
 		Message string `json:"message"`
 	}{Message: "hello world"}, nil
 }
 
 // ArrayReturn method
-func (*TestServiceNS) ArrayReturn(_ interface{}) (interface{}, *ApplicationError) {
+func (*NameService) ArrayReturn(_ interface{}) (interface{}, *ApplicationError) {
 	return []struct {
 		Message string `json:"message"`
 	}{{Message: "hello world from array"}}, nil
 }
 
-func startNewServerNS(t *testing.T) {
-	newServer, err := CreateServer(defaultURL, "ServiceNS")
+func startNewNameServer(t *testing.T) {
+	newServer, err := CreateServer(defaultURL, "ServiceName")
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}
 
-	newServer.Register(new(TestServiceNS), true)
+	newServer.RegisterName("Command", new(NameService))
 	go newServer.Serve()
 }
 
-// TestRPCNS ...
-func TestRPCNS(t *testing.T) {
-	startNewServerNS(t)
+// TestRPC ...
+func TestNameServerRPC(t *testing.T) {
+	startNewNameServer(t)
 	t.Log("Server started")
-	client, err := CreateClient(&CreateClientOption{URL: defaultURL, Queue: "ServiceNS", TimeoutRequest: 5 * time.Second})
+	client, err := CreateClient(&CreateClientOption{URL: defaultURL, Queue: "ServiceName", TimeoutRequest: 5 * time.Second})
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}
@@ -71,7 +65,7 @@ func TestRPCNS(t *testing.T) {
 
 	err = client.Send(
 		request{
-			Action: "Add",
+			Action: "Command.Add",
 			Data: struct {
 				X int `json:"x"`
 				Y int `json:"y"`
@@ -89,7 +83,7 @@ func TestRPCNS(t *testing.T) {
 	// Subtract
 	err = client.Send(
 		request{
-			Action: "Subtract",
+			Action: "Command.Subtract",
 			Data: struct {
 				X int `json:"x"`
 				Y int `json:"y"`
@@ -109,7 +103,7 @@ func TestRPCNS(t *testing.T) {
 	var stringResult string
 	err = client.Send(
 		request{
-			Action: "StringReturn",
+			Action: "Command.StringReturn",
 			Data: struct {
 				Message string `json:"message"`
 			}{Message: "hello"}},
@@ -128,7 +122,7 @@ func TestRPCNS(t *testing.T) {
 	var nilInterface interface{}
 	err = client.Send(
 		request{
-			Action: "ErrorReturn",
+			Action: "Command.ErrorReturn",
 			Data: struct {
 			}{}},
 		&nilInterface,
@@ -164,7 +158,7 @@ func TestRPCNS(t *testing.T) {
 
 	err = client.Send(
 		request{
-			Action: "ArrayReturn",
+			Action: "Command.ArrayReturn",
 			Data: struct {
 			}{}},
 		&arrMessage,
@@ -173,5 +167,4 @@ func TestRPCNS(t *testing.T) {
 	if arrMessage[0].Message != "hello world from array" {
 		t.Fatalf("expect result to equal to 'hello world from array' but got %s", arrMessage[0].Message)
 	}
-
 }

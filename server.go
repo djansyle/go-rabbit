@@ -23,7 +23,8 @@ var unsupportedReplyType = []reflect.Kind{
 // Server is the interface implemented for all servers
 type Server interface {
 	Close()
-	Register(interface{}, bool)
+	RegisterName(string, interface{})
+	Register(interface{})
 	Serve()
 }
 
@@ -151,21 +152,23 @@ func suitableMethods(rcvr interface{}) map[string]*methodType {
 	return methods
 }
 
-// Register a service that handles a request
-func (server *rpcServer) Register(rcvr interface{}, noScope bool) {
+// Register a service that handles a request based on the name supplied
+func (server *rpcServer) RegisterName(name string, rcvr interface{}) {
 	s := new(service)
 
 	s.methods = suitableMethods(rcvr)
 	s.rcvr = reflect.ValueOf(rcvr)
-	s.name = ""
-
-	if !noScope {
-		s.name = reflect.Indirect(reflect.ValueOf(rcvr)).Type().Name()
-	}
+	s.name = name
 
 	if _, exists := server.serviceMap.LoadOrStore(s.name, s); exists {
 		panic("Service is already registered.")
 	}
+}
+
+// Register a service that handles a request
+func (server *rpcServer) Register(rcvr interface{}) {
+	name := reflect.Indirect(reflect.ValueOf(rcvr)).Type().Name()
+	server.RegisterName(name, rcvr)
 }
 
 // Serve start the server
