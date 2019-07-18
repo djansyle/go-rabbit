@@ -20,6 +20,8 @@ var unsupportedReplyType = []reflect.Kind{
 	reflect.UnsafePointer,
 }
 
+type RequestParser func([]byte) (*Request, error)
+
 // Server is the interface implemented for all servers
 type Server interface {
 	Close()
@@ -49,13 +51,13 @@ type rpcServer struct {
 	messages   <-chan amqp.Delivery
 	done       chan bool
 
-	serviceMap sync.Map // map[string]*service
-
-	methods map[string]*methodType
+	serviceMap    sync.Map // map[string]*service
+	requestParser RequestParser
+	methods       map[string]*methodType
 }
 
 // CreateServer creates a new server
-func CreateServer(url string, queue string) (Server, error) {
+func CreateServer(url string, queue string, requestParser RequestParser) (Server, error) {
 	conn, err := CreateConnection(url)
 	if err != nil {
 		return nil, err
@@ -95,7 +97,12 @@ func CreateServer(url string, queue string) (Server, error) {
 		nil,   // args
 	)
 
-	return &rpcServer{connection: conn, messages: messages, done: make(chan bool)}, nil
+	return &rpcServer{
+		connection:    conn,
+		messages:      messages,
+		done:          make(chan bool),
+		requestParser: requestParser,
+	}, nil
 }
 
 // Close the connection of the server
@@ -186,9 +193,9 @@ func (server *rpcServer) Serve() {
 }
 
 func process(server *rpcServer, msg *amqp.Delivery) {
-	var body Request
-	fmt.Printf("rpc.process: message received: %s", string(msg.Body))
-	if err := json.Unmarshal(msg.Body, &body); err != nil {
+	body, perr := server.requestParser(msg.Body)
+
+	if perr != nil {
 		reply(
 			server,
 			msg,

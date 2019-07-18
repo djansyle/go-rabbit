@@ -43,7 +43,7 @@ func (*NameService) ArrayReturn(_ interface{}) (interface{}, *ApplicationError) 
 }
 
 func startNewNameServer(t *testing.T) {
-	newServer, err := CreateServer(defaultURL, "ServiceName")
+	newServer, err := CreateServer(defaultURL, "ServiceName", defaultRequestParser)
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}

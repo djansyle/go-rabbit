@@ -1,6 +1,7 @@
 package rabbit
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 )
@@ -52,8 +53,18 @@ func failRabbitMQConnect(t *testing.T, err error) {
 	t.Fatalf("Error connecting to RabbitMQ instance. Err = %v", err)
 }
 
+func defaultRequestParser (body []byte) (response *Request, err error) {
+	response = new(Request)
+
+	if err := json.Unmarshal(body, response); err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
 func startNewServer(t *testing.T) {
-	newServer, err := CreateServer(defaultURL, "Service")
+	newServer, err := CreateServer(defaultURL, "Service", defaultRequestParser)
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}
