@@ -53,14 +53,14 @@ func failRabbitMQConnect(t *testing.T, err error) {
 	t.Fatalf("Error connecting to RabbitMQ instance. Err = %v", err)
 }
 
-func defaultRequestParser (body []byte) (response *Request, err error) {
-	response = new(Request)
+func defaultRequestParser (body []byte) (request *Request, err error) {
+	request = new(Request)
 
-	if err := json.Unmarshal(body, response); err != nil {
+	if err := json.Unmarshal(body, request); err != nil {
 		return nil, err
 	}
 
-	return response, nil
+	return request, nil
 }
 
 func startNewServer(t *testing.T) {
