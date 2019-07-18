@@ -56,7 +56,10 @@ func startNewNameServer(t *testing.T) {
 func TestNameServerRPC(t *testing.T) {
 	startNewNameServer(t)
 	t.Log("Server started")
-	client, err := CreateClient(&CreateClientOption{URL: defaultURL, Queue: "ServiceName", TimeoutRequest: 5 * time.Second})
+	client, err := CreateClient(
+		&CreateClientOption{URL: defaultURL, Queue: "ServiceName", TimeoutRequest: 5 * time.Second},
+		defaultRequestFormatter,
+	)
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}

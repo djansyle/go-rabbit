@@ -53,7 +53,7 @@ func failRabbitMQConnect(t *testing.T, err error) {
 	t.Fatalf("Error connecting to RabbitMQ instance. Err = %v", err)
 }
 
-func defaultRequestParser (body []byte) (request *Request, err error) {
+func defaultRequestParser(body []byte) (request *Request, err error) {
 	request = new(Request)
 
 	if err := json.Unmarshal(body, request); err != nil {
@@ -82,7 +82,10 @@ type request struct {
 func TestRPC(t *testing.T) {
 	startNewServer(t)
 	t.Log("Server started")
-	client, err := CreateClient(&CreateClientOption{URL: defaultURL, Queue: "Service", TimeoutRequest: 5 * time.Second})
+	client, err := CreateClient(
+		&CreateClientOption{URL: defaultURL, Queue: "Service", TimeoutRequest: 5 * time.Second},
+		defaultRequestFormatter,
+	)
 	if err != nil {
 		failRabbitMQConnect(t, err)
 	}

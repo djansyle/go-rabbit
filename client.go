@@ -14,6 +14,8 @@ type ErrInvalidOutput struct {
 	Type reflect.Type
 }
 
+type RequestFormatter = func(interface{}) (interface{}, error)
+
 func (e *ErrInvalidOutput) Error() string {
 	if e.Type == nil {
 		return "rabbit: Send Output(nil)"
@@ -35,8 +37,9 @@ type client struct {
 	serverQueue string
 	timeout     time.Duration
 
-	connection *Connection
-	queue      *amqp.Queue
+	connection       *Connection
+	queue            *amqp.Queue
+	requestFormatter RequestFormatter
 }
 
 // CreateClientOption is the struct that holds the information of the new client
@@ -47,7 +50,7 @@ type CreateClientOption struct {
 }
 
 // CreateClient creates a new client for rpc server
-func CreateClient(opt *CreateClientOption) (Sender, error) {
+func CreateClient(opt *CreateClientOption, requestFormatter RequestFormatter) (Sender, error) {
 	conn, err := CreateConnection(opt.URL)
 	if err != nil {
 		return nil, err
@@ -97,7 +100,14 @@ func CreateClient(opt *CreateClientOption) (Sender, error) {
 		}
 	}()
 
-	return &client{requests: requests, serverQueue: opt.Queue, connection: conn, timeout: opt.TimeoutRequest, queue: &q}, nil
+	return &client{
+		requests:         requests,
+		serverQueue:      opt.Queue,
+		connection:       conn,
+		timeout:          opt.TimeoutRequest,
+		queue:            &q,
+		requestFormatter: requestFormatter,
+	}, nil
 }
 
 // Sends the message to the rpc server
@@ -113,6 +123,11 @@ func (c *client) Send(message interface{}, output interface{}) error {
 	defer close(request)
 
 	c.requests[corrID] = request
+
+	message, err := c.requestFormatter(message)
+	if err != nil {
+		return err
+	}
 
 	payload, err := json.Marshal(message)
 	if err != nil {
